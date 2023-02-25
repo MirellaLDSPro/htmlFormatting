@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HtmlFormatting</string>
+    <string name="introduction_profile">Mirella <b>dev</b> android a 7 anos</string>
+</resources>
