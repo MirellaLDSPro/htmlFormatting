@@ -1,0 +1,55 @@
+name: Master Release CI
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'release*'
+      
+# Um workflow é composto de um ou mais jobs que podem ser executados sequencialmente ou em paralelo
+jobs:
+  # Este workflow contém um único job chamado "test"
+  test:
+    name: Run Unit Tests
+    # O tipo de runner em que o job será executado
+    runs-on: ubuntu-latest  
+    # Steps representam a sequência de tarefas usando shell runners que serão executadas como parte do job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      # Step para instalar o JDK
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      # Step para rodar testes unitários
+      - name: Run unit tests
+        run: ./gradlew test --stacktrace
+  
+  # Este workflow contém um único job chamado "build-and-deploy"
+  build-and-deploy:
+    # O tipo de runner em que o job será executado
+    runs-on: ubuntu-latest
+    # Steps representam a sequência de tarefas usando shell runners que serão executadas como parte do job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      # Step para instalar o JDK
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      # Step para instalar o NDK
+      - name: Install NDK
+        run: echo "y" | sudo ${{ env.ANDROID_HOME }}/tools/bin/sdkmanager --install "ndk;20.0.5594570"
+      # Step para buildar o projeto e gerar a APK
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+      # Step para enviar a APK gerada para o Firebase App Distribution
+      - name: Upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.2.1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: testers
+          file: app/build/outputs/apk/prod/debug/app-prod-debug.apk 
